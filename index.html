@@ -304,21 +304,29 @@
       gap: 8px;
     }
  
-    .sheet-input-area input {
+    .sheet-input-area textarea {
       flex: 1;
       border: 1px solid #e2e8f0;
       border-radius: 12px;
       padding: 10px 12px;
       font-size: 0.9rem;
       min-width: 0;
+      min-height: 80px;
+      resize: vertical;
     }
  
-    .sheet-input-area input:focus {
+    .sheet-input-area textarea:focus {
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 3px var(--primary-soft);
     }
  
+    .sheet-hint {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    
     .sheet-preview {
       border: 1px solid #e2e8f0;
       border-radius: var(--radius-sm);
@@ -521,9 +529,10 @@
               <a href="#" aria-label="查看 Google Sheets 範本">查看範本格式</a>
             </div>
               <div class="sheet-input-area">
-              <input type="text" id="sheets-url" placeholder="貼入 Google Sheets 共用連結…">
-              <button class="sync-btn" id="sheets-connect-btn">連接</button>
-            </div>
+            <textarea id="sheets-url" placeholder="貼入 Google Sheets 共用連結（可多行）…"></textarea>
+                <button class="sync-btn" id="sheets-connect-btn">連接</button>
+              </div>
+              <div class="sheet-hint">支援多個工作表連結（每行一個），也可貼入同一份試算表不同分頁的 gid 連結。</div>
             <div id="sheets-status" class="status-badge disconnected"><i class="fas fa-exclamation-circle"></i> 尚未連線</div>
             <div id="sheets-preview" class="sheet-preview" style="display:none;"></div>
           </div>
