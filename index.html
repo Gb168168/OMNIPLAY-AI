@@ -1,149 +1,488 @@
-<div class="">
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GitHub AI Desk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #eef2f8;
+      --surface: #ffffff;
+      --surface-muted: #f7f9fd;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --primary-soft: rgba(37, 99, 235, 0.12);
+      --success: #16a34a;
+      --warning: #f59e0b;
+      --shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+    }
 
-  <aside>
-    <div class="logo">
-      <i class="fab fa-github"></i>
-      <span>GitHub AI Desk</span>
-    </div>
-    <ul class="nav-menu">
-      <li class="nav-item">
-        <a class="nav-link active">
-          <i class="fas fa-robot"></i>
-          <span>AI 功能</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link">
-          <i class="fas fa-database"></i>
-          <span>連動資料庫</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link">
-          <i class="fas fa-cog"></i>
-          <span>系統設定</span>
-        </a>
-      </li>
-    </ul>
-    <div class="nav-item" style="margin-top: auto;">
-      <a class="nav-link">
-        <i class="fas fa-sign-out-alt"></i>
-        <span>登出系統</span>
-      </a>
-    </div>
-  </aside>
+    * {
+      box-sizing: border-box;
+    }
 
-  <main>
-    <header>
-      <div class="header-title">
-        <h1 id="page-title">AI 智能對答</h1>
+    body {
+      margin: 0;
+      font-family: "Inter", "Noto Sans TC", system-ui, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at top left, #dbeafe 0%, #eff6ff 38%, var(--bg) 100%);
+      min-height: 100vh;
+    }
+
+    .app-shell {
+      display: flex;
+      min-height: 100vh;
+      padding: 28px;
+      gap: 24px;
+    }
+
+    aside {
+      width: 260px;
+      background: linear-gradient(160deg, #0f172a 0%, #1e293b 55%, #1d4ed8 120%);
+      color: #f8fafc;
+      border-radius: var(--radius-lg);
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: 0.4px;
+      margin-bottom: 32px;
+    }
+
+    .logo i {
+      font-size: 1.6rem;
+      color: #93c5fd;
+    }
+
+    .nav-menu {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .nav-item {
+      display: flex;
+    }
+
+    .nav-link {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      color: rgba(248, 250, 252, 0.8);
+      font-weight: 500;
+      background: transparent;
+      transition: 0.2s ease;
+    }
+
+    .nav-link i {
+      font-size: 1.1rem;
+    }
+
+    .nav-link.active,
+    .nav-link:hover {
+      background: rgba(148, 163, 184, 0.2);
+      color: #ffffff;
+    }
+
+    main {
+      flex: 1;
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 26px 32px 34px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .header-title h1 {
+      margin: 0;
+      font-size: 1.6rem;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface-muted);
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+
+    .user-profile::after {
+      content: "管理員";
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .content-section {
+      background: var(--surface-muted);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      display: none;
+      gap: 24px;
+    }
+
+    .content-section.active {
+      display: block;
+    }
+
+    .chat-container {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    .chat-messages {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .message.ai {
+      background: var(--primary-soft);
+      color: var(--text);
+      padding: 16px 18px;
+      border-radius: 16px;
+      line-height: 1.6;
+    }
+
+    .chat-input-area {
+      display: flex;
+      gap: 12px;
+    }
+
+    .chat-input-area input {
+      flex: 1;
+      border-radius: 999px;
+      border: 1px solid #e2e8f0;
+      padding: 12px 18px;
+      font-size: 1rem;
+    }
+
+    .send-btn {
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      padding: 12px 22px;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 12px 24px rgba(37, 99, 235, 0.3);
+    }
+
+    .section-header h2 {
+      margin: 0 0 6px;
+      font-size: 1.4rem;
+    }
+
+    .section-header p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .db-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .db-card {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      display: grid;
+      gap: 10px;
+      box-shadow: 0 14px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    .db-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 1.2rem;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--success);
+    }
+
+    .status-badge.disconnected {
+      color: var(--warning);
+    }
+
+    .sync-btn {
+      border: none;
+      background: var(--surface-muted);
+      color: var(--text);
+      font-weight: 600;
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .settings-form {
+      display: grid;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .form-group {
+      display: grid;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-weight: 600;
+    }
+
+    .form-group input,
+    .form-group select {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 1rem;
+    }
+
+    .btn-primary {
+      justify-self: flex-start;
+      border: none;
+      border-radius: 999px;
+      padding: 12px 24px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 12px 24px rgba(37, 99, 235, 0.28);
+      cursor: pointer;
+    }
+
+    @media (max-width: 960px) {
+      .app-shell {
+        flex-direction: column;
+        padding: 18px;
+      }
+
+      aside {
+        width: 100%;
+        flex-direction: row;
+        align-items: center;
+        gap: 18px;
+      }
+
+      .nav-menu {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+
+      main {
+        padding: 24px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .chat-input-area {
+        flex-direction: column;
+      }
+
+      .send-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside>
+      <div class="logo">
+        <i class="fab fa-github"></i>
+        <span>GitHub AI Desk</span>
       </div>
-      <div class="user-profile">
-        <img src="https://imgsrc.pub/32x32?bg=0969da&amp;color=ffffff"
-          alt="使用者頭像 - 管理員介面" width="32" height="32"
-          style="border-radius: 50%;">
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a class="nav-link active">
+            <i class="fas fa-robot"></i>
+            <span>AI 功能</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link">
+            <i class="fas fa-database"></i>
+            <span>連動資料庫</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link">
+            <i class="fas fa-cog"></i>
+            <span>系統設定</span>
+          </a>
+        </li>
+      </ul>
+      <div class="nav-item" style="margin-top: auto;">
+        <a class="nav-link">
+         <i class="fas fa-sign-out-alt"></i>
+          <span>登出系統</span>
+        </a>
       </div>
-    </header>
+    </aside>
 
-
+    <main>
+      <header>
+        <div class="header-title">
+          <h1 id="page-title">AI 智能對答</h1>
+        </div>
+       <div class="user-profile">
+          <img src="https://imgsrc.pub/32x32?bg=0969da&amp;color=ffffff"
+            alt="使用者頭像 - 管理員介面" width="32" height="32"
+            style="border-radius: 50%;">
+        </div>
+     </header>
+      
     <section id="ai-feature" class="content-section active">
-      <div class="chat-container">
-        <div class="chat-messages" id="chat-messages">
-          <div class="message ai">
-            您好！我是您的 GitHub AI 助手。我已經準備好根據您的連動資料庫（Google Sheet, Ragic
-            等）來回答客戶的問題了。請問有什麼我可以幫您的？
+        <div class="chat-container">
+          <div class="chat-messages" id="chat-messages">
+            <div class="message ai">
+              您好！我是您的 GitHub AI 助手。我已經準備好根據您的連動資料庫（Google Sheet, Ragic
+              等）來回答客戶的問題了。請問有什麼我可以幫您的？
+            </div>
+          </div>
+          <div class="chat-input-area">
+            <input type="text" id="user-input" placeholder="請輸入您的問題...">
+            <button class="send-btn">發送</button>
           </div>
         </div>
-        <div class="chat-input-area">
-          <input type="text" id="user-input" placeholder="請輸入您的問題...">
-          <button class="send-btn">發送</button>
+      </section>
+
+       <section id="database-sync" class="content-section">
+        <div class="section-header">
+          <h2>資料庫連動中心</h2>
+          <p>設定您的 AI 知識來源，支援多種第三方平台同步。</p>
         </div>
-      </div>
-    </section>
-
-
-    <section id="database-sync" class="content-section">
-      <div class="section-header">
-        <h2>資料庫連動中心</h2>
-        <p>設定您的 AI 知識來源，支援多種第三方平台同步。</p>
-      </div>
-      <div class="db-grid">
-
-        <div class="db-card">
-          <div class="db-icon"><i class="fas fa-file-excel"></i></div>
-          <h3>Google Sheets</h3>
-          <p>將您的產品清單或 FAQ 直接同步至 AI 知識庫。每 15 分鐘自動更新一次。</p>
-          <div class="status-badge"><i class="fas fa-check-circle"></i> 已連線
+        <div class="db-grid">
+          <div class="db-card">
+            <div class="db-icon"><i class="fas fa-file-excel"></i></div>
+            <h3>Google Sheets</h3>
+            <p>將您的產品清單或 FAQ 直接同步至 AI 知識庫。每 15 分鐘自動更新一次。</p>
+            <div class="status-badge"><i class="fas fa-check-circle"></i> 已連線
+            </div>
+            <button class="sync-btn">立即同步資料</button>
           </div>
-          <button class="sync-btn">立即同步資料</button>
-        </div>
 
         <div class="db-card">
-          <div class="db-icon"><i class="fas fa-folder-open"></i></div>
-          <h3>Google 雲端資料夾</h3>
-          <p>讀取資料夾內的 PDF、DOCX 檔案，讓 AI 具備深度文檔處理能力。</p>
-          <div class="status-badge disconnected"><i
-              class="fas fa-exclamation-circle"></i> 未授權</div>
-          <button class="sync-btn">開始授權</button>
-        </div>
-
-        <div class="db-card">
-          <div class="db-icon"><i class="fas fa-table"></i></div>
-          <h3>Ragic 企業雲端資料庫</h3>
-          <p>連動您的 Ragic 表單，實現即時訂單查詢、會員資料調用等進階功能。</p>
-          <div class="status-badge"><i class="fas fa-check-circle"></i> 已連線
+            <div class="db-icon"><i class="fas fa-folder-open"></i></div>
+            <h3>Google 雲端資料夾</h3>
+            <p>讀取資料夾內的 PDF、DOCX 檔案，讓 AI 具備深度文檔處理能力。</p>
+            <div class="status-badge disconnected"><i
+                class="fas fa-exclamation-circle"></i> 未授權</div>
+            <button class="sync-btn">開始授權</button>
           </div>
-          <button class="sync-btn">更新 API 權限</button>
-        </div>
-
-        <div class="db-card">
-          <div class="db-icon"><i class="fab fa-github"></i></div>
-          <h3>GitHub Repository</h3>
-          <p>自動掃描您的 Markdown 文檔與程式碼註解作為 AI 的技術支援依據。</p>
-          <div class="status-badge"><i class="fas fa-check-circle"></i> 已連線
+         
+          <div class="db-card">
+            <div class="db-icon"><i class="fas fa-table"></i></div>
+            <h3>Ragic 企業雲端資料庫</h3>
+            <p>連動您的 Ragic 表單，實現即時訂單查詢、會員資料調用等進階功能。</p>
+            <div class="status-badge"><i class="fas fa-check-circle"></i> 已連線
+            </div>
+            <button class="sync-btn">更新 API 權限</button>
           </div>
-          <button class="sync-btn">管理分支</button>
-        </div>
-      </div>
-    </section>
 
+    <div class="db-card">
+            <div class="db-icon"><i class="fab fa-github"></i></div>
+            <h3>GitHub Repository</h3>
+            <p>自動掃描您的 Markdown 文檔與程式碼註解作為 AI 的技術支援依據。</p>
+            <div class="status-badge"><i class="fas fa-check-circle"></i> 已連線
+            </div>
+            <button class="sync-btn">管理分支</button>
+          </div>
+        </div>
+        </section>
 
-    <section id="settings" class="content-section">
-      <div class="section-header">
-        <h2>系統整合設定</h2>
-        <p>配置您的 GitHub Actions 與 AI 模型參數。</p>
-      </div>
-      <form action="https://api.getsite.ai/v1/forms/submit" method="POST"
-        class="settings-form">
-        <input type="hidden" name="form_name" value="system_settings">
-        <div class="form-group">
-          <label for="ai_model">AI 模型選擇</label>
-          <select id="ai_model" name="ai_model" required="">
-            <option value="gpt-4">GPT-4 Turbo (推薦)</option>
-            <option value="gpt-3.5">GPT-3.5 Turbo</option>
-            <option value="claude-3">Claude 3 Opus</option>
-          </select>
+      <section id="settings" class="content-section">
+        <div class="section-header">
+          <h2>系統整合設定</h2>
+          <p>配置您的 GitHub Actions 與 AI 模型參數。</p>
         </div>
-        <div class="form-group">
-          <label for="github_token">GitHub Personal Access Token</label>
-          <input type="password" id="github_token" name="github_token"
-            placeholder="ghp_********************" required="">
-        </div>
-        <div class="form-group">
-          <label for="ragic_api">Ragic API Key</label>
-          <input type="password" id="ragic_api" name="ragic_api"
-            placeholder="輸入您的 Ragic API 金鑰">
-        </div>
-        <div class="form-group">
-          <label>
-            <input type="checkbox" name="auto_deploy" checked=""> 開啟 GitHub
-            Actions 自動部署更新
-          </label>
-        </div>
-        <button type="submit" class="btn-primary">儲存設定</button>
-      </form>
-    </section>
-  </main>
+       <form action="https://api.getsite.ai/v1/forms/submit" method="POST"
+          class="settings-form">
+          <input type="hidden" name="form_name" value="system_settings">
+          <div class="form-group">
+            <label for="ai_model">AI 模型選擇</label>
+            <select id="ai_model" name="ai_model" required>
+              <option value="gpt-4">GPT-4 Turbo (推薦)</option>
+              <option value="gpt-3.5">GPT-3.5 Turbo</option>
+              <option value="claude-3">Claude 3 Opus</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="github_token">GitHub Personal Access Token</label>
+            <input type="password" id="github_token" name="github_token"
+              placeholder="ghp_********************" required>
+          </div>
+          <div class="form-group">
+            <label for="ragic_api">Ragic API Key</label>
+            <input type="password" id="ragic_api" name="ragic_api"
+              placeholder="輸入您的 Ragic API 金鑰">
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" name="auto_deploy" checked> 開啟 GitHub
+              Actions 自動部署更新
+            </label>
+          </div>
+          <button type="submit" class="btn-primary">儲存設定</button>
+        </form>
+      </section>
+    </main>
+  </div>
 
   <script src="script.js"></script>
-</div>
+</body>
+</html>
