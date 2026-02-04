@@ -123,7 +123,7 @@ function renderPreview(data) {
  
   let html = '<table><thead><tr>';
   for (let c = 0; c < showCols; c++) {
-    html += `<th>${headers[c] || ""}</th>`;
+    html += `<th>${escapeHtml(headers[c] || "")}</th>`;
   }
   html += '</tr></thead><tbody>';
  
@@ -132,7 +132,7 @@ function renderPreview(data) {
   for (let r = 1; r < rowLimit; r++) {
     html += '<tr>';
     for (let c = 0; c < showCols; c++) {
-      html += `<td>${(data[r] && data[r][c]) || ""}</td>`;
+      html += `<td>${escapeHtml((data[r] && data[r][c]) || "")}</td>`;
     }
     html += '</tr>';
   }
