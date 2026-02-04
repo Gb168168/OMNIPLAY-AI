@@ -55,8 +55,8 @@ const sheetsPreview    = document.getElementById("sheets-preview");
 /**
  * 從 Google Sheets 共用連結中提取 Spreadsheet ID 與 gid。
  * 支援格式：
- *   /d/{ID}/edit…       → export?format=csv
- *   /d/{ID}/pub?…       → 直接用 export
+     /d/{ID}/edit…       → gviz/tq?tqx=out:csv
+ *   /d/{ID}/pub?…       → gviz/tq?tqx=out:csv
  */
 function parseSheetUrl(url) {
   const match = url.match(/\/spreadsheets\/d\/([^/]+)/);
@@ -66,7 +66,7 @@ function parseSheetUrl(url) {
   const gidMatch = url.match(/[#&?]gid=(\d+)/);
   const gid = gidMatch ? gidMatch[1] : "0";
  
-  return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
+  return `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&gid=${gid}`;
 }
  
 /**
@@ -180,7 +180,10 @@ async function fetchSheetData(csvUrl) {
     if (sheetsRefreshTimer) clearInterval(sheetsRefreshTimer);
     sheetsRefreshTimer = setInterval(() => fetchSheetData(csvUrl), 15 * 60 * 1000);
   } catch (err) {
-    setStatus(false, "連接失敗：" + err.message);
+      const message = err.message.startsWith("HTTP 400")
+      ? "連接失敗：請確認已設為「知道連結的任何人可檢視」後再試。"
+      : "連接失敗：" + err.message;
+    setStatus(false, message);
     sheetsPreview.style.display = "none";
   } finally {
     sheetsConnectBtn.disabled = false;
@@ -267,4 +270,3 @@ sendBtn.addEventListener("click", handleSend);
 userInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
 });
-
