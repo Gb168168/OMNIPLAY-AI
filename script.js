@@ -46,7 +46,235 @@ if (initialTarget) {
 /* ─── Google Sheets 整合 ─── */
 let sheetsKnowledgeBase = [];   // 儲存拉取到的二維陣列（第一筆為標題行）
 let sheetsRefreshTimer = null;  // 自動更新計時器
- 
+
+/* ─── NotebookLM 風格來源管理 ─── */
+const sourceTitleInput = document.getElementById("source-title");
+const sourceContentInput = document.getElementById("source-content");
+const addSourceBtn = document.getElementById("add-source-btn");
+const loadSampleBtn = document.getElementById("load-sample-btn");
+const sourceList = document.getElementById("source-list");
+const sourceCount = document.getElementById("source-count");
+const summaryText = document.getElementById("summary-text");
+const topicList = document.getElementById("topic-list");
+const questionList = document.getElementById("question-list");
+const refreshSummaryBtn = document.getElementById("refresh-summary-btn");
+const refreshQuestionsBtn = document.getElementById("refresh-questions-btn");
+
+const sources = [];
+let sourceIdSeed = 0;
+
+const stopWords = new Set([
+  "我們",
+  "你們",
+  "他們",
+  "這個",
+  "這些",
+  "目前",
+  "以及",
+  "可以",
+  "如果",
+  "因此",
+  "另外",
+  "透過",
+  "系統",
+  "方案",
+  "產品",
+  "規劃",
+  "內容",
+  "this",
+  "that",
+  "with",
+  "from",
+  "have",
+  "will",
+  "your",
+]);
+
+function updateSourceCount() {
+  sourceCount.textContent = `${sources.length} 份`;
+}
+
+function renderSourceList() {
+  sourceList.innerHTML = "";
+  if (sources.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "insight-empty";
+    empty.textContent = "尚未新增內容。可貼上文件、企劃、FAQ 等文字資料。";
+    sourceList.appendChild(empty);
+    updateSourceCount();
+    return;
+  }
+
+  sources.forEach((source) => {
+    const card = document.createElement("div");
+    card.className = "source-card";
+    const title = document.createElement("h4");
+    title.textContent = source.title;
+    const snippet = document.createElement("p");
+    snippet.className = "insight-empty";
+    snippet.textContent = source.content.slice(0, 120) + (source.content.length > 120 ? "…" : "");
+    const meta = document.createElement("div");
+    meta.className = "source-meta";
+    meta.textContent = `${source.originLabel} · ${source.wordCount} 字`;
+    card.appendChild(title);
+    card.appendChild(snippet);
+    card.appendChild(meta);
+    sourceList.appendChild(card);
+  });
+
+  updateSourceCount();
+}
+
+function upsertSource({ id, title, content, originLabel }) {
+  const wordCount = content.replace(/\s+/g, "").length;
+  const existingIndex = sources.findIndex((item) => item.id === id);
+  const payload = {
+    id,
+    title,
+    content,
+    wordCount,
+    originLabel,
+    createdAt: new Date().toLocaleString("zh-Hant", {
+      hour12: false,
+    }),
+  };
+
+  if (existingIndex === -1) {
+    sources.unshift(payload);
+  } else {
+    sources[existingIndex] = payload;
+  }
+
+  renderSourceList();
+  refreshInsights();
+}
+
+function addSourceFromInput() {
+  const title = sourceTitleInput.value.trim() || `自訂來源 ${sources.length + 1}`;
+  const content = sourceContentInput.value.trim();
+  if (!content) return;
+
+  sourceIdSeed += 1;
+  upsertSource({
+    id: `manual-${sourceIdSeed}`,
+    title,
+    content,
+    originLabel: "手動貼入",
+  });
+
+  sourceTitleInput.value = "";
+  sourceContentInput.value = "";
+}
+
+function loadSampleSources() {
+  const samples = [
+    {
+      title: "產品簡報：OmniPlay AI 3.0",
+      content:
+        "OmniPlay AI 3.0 將焦點放在多文件筆記整理與決策支援。核心功能包含：多來源上傳、引用式回覆、快速摘要與建議問題產生。目標客群為企業知識管理與客服團隊，期望在 2024 Q4 上線 beta。",
+    },
+    {
+      title: "會議紀要：客服流程優化",
+      content:
+        "團隊決議將 FAQ 來源整合到同一套知識庫，並在對話中標示引用來源。KPI 包含平均回覆時間降低 25%、新進人員培訓時間縮短 40%。需新增『快速提問模板』與『重點摘要』區塊。",
+    },
+  ];
+
+  samples.forEach((sample) => {
+    sourceIdSeed += 1;
+    upsertSource({
+      id: `sample-${sourceIdSeed}`,
+      title: sample.title,
+      content: sample.content,
+      originLabel: "範例來源",
+    });
+  });
+}
+
+function extractKeywords(text) {
+  const tokens = text.match(/[\u4e00-\u9fa5]{2,6}|[A-Za-z]{3,}/g) || [];
+  const counts = new Map();
+
+  tokens.forEach((token) => {
+    const normalized = token.toLowerCase();
+    if (stopWords.has(normalized)) return;
+    counts.set(normalized, (counts.get(normalized) || 0) + 1);
+  });
+
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([word]) => word);
+}
+
+function generateSummary() {
+  if (sources.length === 0) return "尚未有內容。";
+  return sources
+    .slice(0, 3)
+    .map((source) => `${source.title}：${source.content.slice(0, 80)}…`)
+    .join("\n");
+}
+
+function generateTopics() {
+  if (sources.length === 0) return [];
+  const combined = sources.map((source) => source.content).join(" ");
+  return extractKeywords(combined);
+}
+
+function generateQuestions(topics) {
+  if (topics.length === 0) return [];
+  const templates = [
+    (topic) => `關於「${topic}」的核心重點是什麼？`,
+    (topic) => `有哪些應用情境需要注意「${topic}」？`,
+    (topic) => `「${topic}」下一步行動建議？`,
+  ];
+  const questions = [];
+  topics.forEach((topic, index) => {
+    const template = templates[index % templates.length];
+    questions.push(template(topic));
+  });
+  return questions.slice(0, 5);
+}
+
+function refreshInsights() {
+  summaryText.textContent = generateSummary();
+
+  const topics = generateTopics();
+  topicList.innerHTML = "";
+  if (topics.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "insight-empty";
+    empty.textContent = "尚未有主題。";
+    topicList.appendChild(empty);
+  } else {
+    topics.forEach((topic) => {
+      const li = document.createElement("li");
+      li.textContent = topic;
+      topicList.appendChild(li);
+    });
+  }
+
+  const questions = generateQuestions(topics);
+  questionList.innerHTML = "";
+  if (questions.length === 0) {
+    const empty = document.createElement("span");
+    empty.className = "insight-empty";
+    empty.textContent = "加入來源後會自動生成提問。";
+    questionList.appendChild(empty);
+  } else {
+    questions.forEach((question) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = question;
+      btn.addEventListener("click", () => {
+        userInput.value = question;
+        userInput.focus();
+      });
+      questionList.appendChild(btn);
+    });
+  }
+}
+
 const sheetsUrlInput   = document.getElementById("sheets-url");
 const sheetsConnectBtn = document.getElementById("sheets-connect-btn");
 const sheetsStatus     = document.getElementById("sheets-status");
@@ -279,6 +507,21 @@ async function fetchSheetData(csvUrls, spreadsheetIds) {
     const rowCount = combined.length - 1;
     setStatus(true, `已連線（共 ${rowCount} 筆資料 / ${successfulSheets.length} 個工作表）`);
 
+   const sheetText = combined
+      .slice(1, 21)
+      .map((row) =>
+        row
+          .map((cell, index) => `${combined[0][index] || "欄位"}：${cell}`)
+          .join(" | ")
+      )
+      .join("\n");
+    upsertSource({
+      id: "google-sheets",
+      title: "Google Sheets 知識庫",
+      content: sheetText,
+      originLabel: "Sheets 匯入",
+    });
+   
     // 啟動 15 分鐘自動刷新
     if (sheetsRefreshTimer) clearInterval(sheetsRefreshTimer);
       sheetsRefreshTimer = setInterval(
@@ -319,35 +562,54 @@ const sendBtn       = document.querySelector(".send-btn");
  * 策略：將使用者問題分解為詞，計算每筆記錄中命中詞數，取最高者。
  */
 function searchKnowledge(question) {
-  if (sheetsKnowledgeBase.length < 2) return null;
- 
-  const headers = sheetsKnowledgeBase[0];
-  const words = question.toLowerCase().split(/[\s,，。、？?！!]+/).filter(Boolean);
-  if (words.length === 0) return null;
- 
-  let bestScore = 0, bestRow = null;
- 
-  for (let r = 1; r < sheetsKnowledgeBase.length; r++) {
-    const rowText = sheetsKnowledgeBase[r].join(" ").toLowerCase();
-    let score = 0;
-    for (const w of words) {
-      if (rowText.includes(w)) score++;
-    }
-    if (score > bestScore) { bestScore = score; bestRow = r; }
-  }
- 
-  if (bestScore === 0) return null;
- 
-  // 將匹配行以「欄位名：值」方式組合回答
-  const row = sheetsKnowledgeBase[bestRow];
-  const parts = headers.map((h, i) => (row[i] ? `${h}：${row[i]}` : "")).filter(Boolean);
-  return parts.join("\n");
+ if (sources.length === 0) return null;
+
+  const keywords = question
+    .toLowerCase()
+    .split(/[\s,，。、？?！!]+/)
+    .filter(Boolean);
+  if (keywords.length === 0) return null;
+
+  const scored = sources
+    .map((source) => {
+      const text = source.content.toLowerCase();
+      const score = keywords.reduce((acc, keyword) => (text.includes(keyword) ? acc + 1 : acc), 0);
+      return { source, score };
+    })
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 2);
+
+  if (scored.length === 0) return null;
+
+  const answer = scored
+    .map(({ source }) => `${source.title}：${source.content.slice(0, 140)}…`)
+    .join("\n\n");
+
+  return {
+    answer,
+    citations: scored.map(({ source }) => source.title),
+  };
 }
  
-function appendMessage(role, text) {
+function appendMessage(role, text, citations = []) {
   const div = document.createElement("div");
   div.className = "message " + role;
-  div.textContent = text;
+  const paragraph = document.createElement("p");
+  paragraph.textContent = text;
+  div.appendChild(paragraph);
+
+  if (role === "ai" && citations.length > 0) {
+    const citationBox = document.createElement("div");
+    citationBox.className = "citations";
+    citations.forEach((item) => {
+      const pill = document.createElement("span");
+      pill.className = "citation-pill";
+      pill.textContent = item;
+      citationBox.appendChild(pill);
+    });
+    div.appendChild(citationBox);
+  }
   chatMessages.appendChild(div);
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
@@ -361,16 +623,16 @@ function handleSend() {
  
   // 簡短延遲模擬處理
   setTimeout(() => {
-    if (sheetsKnowledgeBase.length < 2) {
-      appendMessage("ai", "目前尚未連動 Google Sheets 資料。請先在「連動資料庫」頁面貼入您的工作表連結並連接。");
+  if (sources.length === 0) {
+      appendMessage("ai", "目前尚未加入任何來源。請先在左側新增文件內容或載入範例來源。");
       return;
     }
  
-    const answer = searchKnowledge(q);
-    if (answer) {
-      appendMessage("ai", "根據您的資料庫找到以下參考：\n\n" + answer);
+    const result = searchKnowledge(q);
+    if (result) {
+      appendMessage("ai", "根據來源整理的重點如下：\n\n" + result.answer, result.citations);
     } else {
-      appendMessage("ai", "抱歉，在目前的知識庫中未找到與您問題相關的內容。請試試其他關鍵詞。");
+      appendMessage("ai", "抱歉，在目前的來源中未找到明確線索。您可以換個關鍵詞或補充更多內容。");
     }
   }, 600);
 }
@@ -379,3 +641,10 @@ sendBtn.addEventListener("click", handleSend);
 userInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
 });
+
+addSourceBtn.addEventListener("click", addSourceFromInput);
+loadSampleBtn.addEventListener("click", loadSampleSources);
+refreshSummaryBtn.addEventListener("click", refreshInsights);
+refreshQuestionsBtn.addEventListener("click", refreshInsights);
+
+refreshInsights();
