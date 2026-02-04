@@ -165,6 +165,160 @@
       display: block;
     }
 
+    .notebook-layout {
+      display: grid;
+      grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+      gap: 24px;
+    }
+
+    .sources-panel,
+    .assistant-panel {
+      display: grid;
+      gap: 16px;
+    }
+
+    .panel-card {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      box-shadow: 0 14px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .panel-title h3 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+
+    .source-count {
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+    }
+
+    .source-inputs {
+      display: grid;
+      gap: 10px;
+    }
+
+    .source-inputs input,
+    .source-inputs textarea {
+      width: 100%;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+
+    .source-inputs textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .source-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .secondary-btn {
+      border: none;
+      background: var(--surface-muted);
+      color: var(--text);
+      font-weight: 600;
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .source-list {
+      display: grid;
+      gap: 12px;
+      max-height: 360px;
+      overflow: auto;
+    }
+
+    .source-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px;
+      display: grid;
+      gap: 6px;
+      background: #f8fafc;
+    }
+
+    .source-card h4 {
+      margin: 0;
+      font-size: 0.98rem;
+    }
+
+    .source-meta {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .insight-card {
+      background: #f8fafc;
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+      min-height: 120px;
+    }
+
+    .insight-card h4 {
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    .insight-card ul {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .insight-empty {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .quick-questions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .quick-questions button {
+      border: none;
+      background: var(--primary-soft);
+      color: var(--primary);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.82rem;
+    }
+
     .chat-container {
       background: var(--surface);
       border-radius: var(--radius-md);
@@ -184,6 +338,21 @@
       padding: 16px 18px;
       border-radius: 16px;
       line-height: 1.6;
+    }
+
+    .message.ai .citations {
+      margin-top: 8px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .message.ai .citation-pill {
+      background: rgba(148, 163, 184, 0.25);
+      padding: 4px 8px;
+      border-radius: 999px;
     }
 
     .chat-input-area {
@@ -434,6 +603,10 @@
       main {
         padding: 24px;
       }
+      
+      .notebook-layout {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 640px) {
@@ -495,16 +668,67 @@
      </header>
       
     <section id="ai-feature" class="content-section active">
-        <div class="chat-container">
-          <div class="chat-messages" id="chat-messages">
-            <div class="message ai">
-              您好！我是您的 GitHub AI 助手。我已經準備好根據您的連動資料庫（Google Sheet, Ragic
-              等）來回答客戶的問題了。請問有什麼我可以幫您的？
+       <div class="notebook-layout">
+          <div class="sources-panel">
+            <div class="panel-card">
+              <div class="panel-title">
+                <h3>知識來源</h3>
+                <span class="source-count" id="source-count">0 份</span>
+              </div>
+              <p class="sheet-hint">貼上文件、會議筆記或研究內容，建立專屬知識庫，像 NotebookLM 一樣即時追問。</p>
+              <div class="source-inputs">
+                <input type="text" id="source-title" placeholder="來源標題（例如：產品簡報 Q3）">
+                <textarea id="source-content" placeholder="貼上重點內容或摘要…"></textarea>
+              </div>
+              <div class="source-actions">
+                <button class="send-btn" id="add-source-btn">新增來源</button>
+                <button class="secondary-btn" id="load-sample-btn">載入範例來源</button>
+              </div>
+            </div>
+            <div class="panel-card">
+              <div class="panel-title">
+                <h3>已上傳來源</h3>
+              </div>
+              <div class="source-list" id="source-list">
+                <p class="insight-empty">尚未新增內容。可貼上文件、企劃、FAQ 等文字資料。</p>
+              </div>
             </div>
           </div>
-          <div class="chat-input-area">
-            <input type="text" id="user-input" placeholder="請輸入您的問題...">
-            <button class="send-btn">發送</button>
+          <div class="assistant-panel">
+            <div class="panel-card">
+              <div class="panel-title">
+                <h3>即時洞察</h3>
+                <div class="source-actions">
+                  <button class="secondary-btn" id="refresh-summary-btn">重新整理摘要</button>
+                  <button class="secondary-btn" id="refresh-questions-btn">生成提問</button>
+                </div>
+              </div>
+              <div class="insight-grid">
+                <div class="insight-card">
+                  <h4>摘要</h4>
+                  <p id="summary-text" class="insight-empty">尚未有內容。</p>
+                </div>
+                <div class="insight-card">
+                  <h4>關鍵主題</h4>
+                  <ul id="topic-list"></ul>
+                </div>
+                <div class="insight-card">
+                  <h4>建議問題</h4>
+                  <div class="quick-questions" id="question-list"></div>
+                </div>
+              </div>
+            </div>
+            <div class="chat-container">
+              <div class="chat-messages" id="chat-messages">
+                <div class="message ai">
+                  您好！這裡是 NotebookLM 風格的 AI 筆記助理。請先加入來源，我就能從內容中引用並回答問題。
+                </div>
+              </div>
+              <div class="chat-input-area">
+                <input type="text" id="user-input" placeholder="請輸入您的問題或請求摘要...">
+                <button class="send-btn">發送</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
