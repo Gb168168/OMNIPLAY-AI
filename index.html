@@ -270,6 +270,35 @@
       cursor: pointer;
     }
 
+    .sheet-steps {
+      background: #f8fafc;
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .sheet-steps h4 {
+      margin: 0;
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+
+    .sheet-steps ol {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .sheet-steps a {
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
     .settings-form {
       display: grid;
       gap: 16px;
@@ -411,6 +440,15 @@
             <div class="db-icon"><i class="fas fa-file-excel"></i></div>
             <h3>Google Sheets</h3>
             <p>將您的產品清單或 FAQ 直接同步至 AI 知識庫。每 15 分鐘自動更新一次。</p>
+             <div class="sheet-steps">
+              <h4>如何提供資料</h4>
+              <ol>
+                <li>將工作表命名好欄位（例如：問題、答案、分類）。</li>
+                <li>點選「共用」→ 設為「知道連結的任何人可檢視」。</li>
+                <li>複製連結並在授權後貼到資料來源欄位。</li>
+              </ol>
+              <a href="#" aria-label="查看 Google Sheets 範本">查看範本格式</a>
+            </div>
               <div class="status-badge disconnected"><i class="fas fa-exclamation-circle"></i> 尚未連線</div>
             <button class="sync-btn">開始授權</button>
           </div>
