@@ -53,33 +53,70 @@ const sheetsStatus     = document.getElementById("sheets-status");
 const sheetsPreview    = document.getElementById("sheets-preview");
  
 /**
- * 從 Google Sheets 共用連結中提取 Spreadsheet ID 與 gid。
- * 支援格式：
-     /d/{ID}/edit…       → gviz/tq?tqx=out:csv
- *   /d/{ID}/pub?…       → gviz/tq?tqx=out:csv
+ * 從 Google Sheets 共用連結中提取 Spreadsheet ID。
  */
-function parseSheetUrl(url) {
+function parseSpreadsheetId(url) {
   const match = url.match(/\/spreadsheets\/d\/([^/]+)/);
-  if (!match) return null;
-
-  const id = match[1];
-  const gidMatch = url.match(/[#&?]gid=(\d+)/);
-  const gid = gidMatch ? gidMatch[1] : "0";
- 
-  return `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&gid=${gid}`;
+  return match ? match[1] : null;
 }
 
-function parseSheetUrls(raw) {
+  /**
+ * 從 Google Sheets 共用連結中提取 gid。
+ */
+function parseSheetGid(url) {
+  const gidMatch = url.match(/[#&?]gid=(\d+)/);
+  return gidMatch ? gidMatch[1] : null;
+}
+
+/**
+ * 解析輸入：既可放單一分頁連結，也可放整份試算表連結。
+ */
+function parseSheetSources(raw) {
   const candidates = raw
     .split(/\s+/)
     .map((value) => value.trim())
     .filter(Boolean);
 
-  const urls = candidates
-    .map((value) => parseSheetUrl(value))
+  const csvUrls = new Set();
+  const spreadsheetIds = new Set();
+
+  candidates.forEach((value) => {
+    const id = parseSpreadsheetId(value);
+    if (!id) return;
+    const gid = parseSheetGid(value);
+    if (gid) {
+      csvUrls.add(
+        `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&gid=${gid}`
+      );
+    } else {
+      spreadsheetIds.add(id);
+    }
+  });
+
+  return {
+    csvUrls: Array.from(csvUrls),
+    spreadsheetIds: Array.from(spreadsheetIds),
+  };
+}
+
+async function fetchWorksheetGids(spreadsheetId) {
+  const feedUrl = `https://spreadsheets.google.com/feeds/worksheets/${spreadsheetId}/public/basic?alt=json`;
+  const res = await fetch(feedUrl);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  const entries = json?.feed?.entry || [];
+  if (entries.length === 0) throw new Error("找不到任何分頁");
+
+  const gids = entries
+    .map((entry) => {
+      const idText = entry?.id?.$t || "";
+      const gid = idText.split("/").pop();
+      return gid;
+    })
     .filter(Boolean);
 
-  return Array.from(new Set(urls));
+   if (gids.length === 0) throw new Error("分頁資訊解析失敗");
+   return gids;
 }
 
 /**
@@ -172,13 +209,41 @@ function setStatus(connected, message) {
 /**
  * 核心：拉取並更新知識庫。
  */
-async function fetchSheetData(csvUrls) {
+async function fetchSheetData(csvUrls, spreadsheetIds) {
   setStatus(false, "拉取中…");
   sheetsConnectBtn.disabled = true;
 
   try {
-  const results = await Promise.allSettled(
-      csvUrls.map(async (csvUrl) => {
+    const allCsvUrls = new Set(csvUrls);
+
+    if (spreadsheetIds.length > 0) {
+      const gidMaps = await Promise.all(
+        spreadsheetIds.map(async (id) => {
+          try {
+            const gids = await fetchWorksheetGids(id);
+            return { id, gids };
+          } catch (err) {
+            throw new Error(
+              `無法取得試算表分頁清單，請確認已設為公開或已發布：${err.message}`
+            );
+          }
+        })
+      );
+
+      gidMaps.forEach(({ id, gids }) => {
+        gids.forEach((gid) => {
+          allCsvUrls.add(
+            `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&gid=${gid}`
+          );
+        });
+      });
+    }
+
+    const finalCsvUrls = Array.from(allCsvUrls);
+    if (finalCsvUrls.length === 0) throw new Error("沒有可拉取的工作表連結");
+
+    const results = await Promise.allSettled(
+      finalCsvUrls.map(async (csvUrl) => {
         const res = await fetch(csvUrl);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const text = await res.text();
@@ -216,7 +281,10 @@ async function fetchSheetData(csvUrls) {
 
     // 啟動 15 分鐘自動刷新
     if (sheetsRefreshTimer) clearInterval(sheetsRefreshTimer);
-     sheetsRefreshTimer = setInterval(() => fetchSheetData(csvUrls), 15 * 60 * 1000);
+      sheetsRefreshTimer = setInterval(
+      () => fetchSheetData(finalCsvUrls, spreadsheetIds),
+      15 * 60 * 1000
+    );
   } catch (err) {
     const message = err.message.startsWith("HTTP 400")
       ? "連接失敗：請確認已設為「知道連結的任何人可檢視」後再試。"
@@ -232,10 +300,13 @@ sheetsConnectBtn.addEventListener("click", () => {
   const raw = sheetsUrlInput.value.trim();
   if (!raw) { setStatus(false, "請輸入連結"); return; }
 
-  const csvUrls = parseSheetUrls(raw);
-  if (csvUrls.length === 0) { setStatus(false, "連結格式無效"); return; }
+  const sources = parseSheetSources(raw);
+  if (sources.csvUrls.length === 0 && sources.spreadsheetIds.length === 0) {
+    setStatus(false, "連結格式無效");
+    return;
+  }
 
-  fetchSheetData(csvUrls);
+  fetchSheetData(sources.csvUrls, sources.spreadsheetIds);
 });
  
 /* ─── AI 對答（從 Google Sheets 知識庫搜索） ─── */
