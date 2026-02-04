@@ -1,0 +1,149 @@
+<div class="">
+
+  <aside>
+    <div class="logo">
+      <i class="fab fa-github"></i>
+      <span>GitHub AI Desk</span>
+    </div>
+    <ul class="nav-menu">
+      <li class="nav-item">
+        <a class="nav-link active">
+          <i class="fas fa-robot"></i>
+          <span>AI 功能</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link">
+          <i class="fas fa-database"></i>
+          <span>連動資料庫</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link">
+          <i class="fas fa-cog"></i>
+          <span>系統設定</span>
+        </a>
+      </li>
+    </ul>
+    <div class="nav-item" style="margin-top: auto;">
+      <a class="nav-link">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>登出系統</span>
+      </a>
+    </div>
+  </aside>
+
+  <main>
+    <header>
+      <div class="header-title">
+        <h1 id="page-title">AI 智能對答</h1>
+      </div>
+      <div class="user-profile">
+        <img src="https://imgsrc.pub/32x32?bg=0969da&amp;color=ffffff"
+          alt="使用者頭像 - 管理員介面" width="32" height="32"
+          style="border-radius: 50%;">
+      </div>
+    </header>
+
+
+    <section id="ai-feature" class="content-section active">
+      <div class="chat-container">
+        <div class="chat-messages" id="chat-messages">
+          <div class="message ai">
+            您好！我是您的 GitHub AI 助手。我已經準備好根據您的連動資料庫（Google Sheet, Ragic
+            等）來回答客戶的問題了。請問有什麼我可以幫您的？
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <input type="text" id="user-input" placeholder="請輸入您的問題...">
+          <button class="send-btn">發送</button>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="database-sync" class="content-section">
+      <div class="section-header">
+        <h2>資料庫連動中心</h2>
+        <p>設定您的 AI 知識來源，支援多種第三方平台同步。</p>
+      </div>
+      <div class="db-grid">
+
+        <div class="db-card">
+          <div class="db-icon"><i class="fas fa-file-excel"></i></div>
+          <h3>Google Sheets</h3>
+          <p>將您的產品清單或 FAQ 直接同步至 AI 知識庫。每 15 分鐘自動更新一次。</p>
+          <div class="status-badge"><i class="fas fa-check-circle"></i> 已連線
+          </div>
+          <button class="sync-btn">立即同步資料</button>
+        </div>
+
+        <div class="db-card">
+          <div class="db-icon"><i class="fas fa-folder-open"></i></div>
+          <h3>Google 雲端資料夾</h3>
+          <p>讀取資料夾內的 PDF、DOCX 檔案，讓 AI 具備深度文檔處理能力。</p>
+          <div class="status-badge disconnected"><i
+              class="fas fa-exclamation-circle"></i> 未授權</div>
+          <button class="sync-btn">開始授權</button>
+        </div>
+
+        <div class="db-card">
+          <div class="db-icon"><i class="fas fa-table"></i></div>
+          <h3>Ragic 企業雲端資料庫</h3>
+          <p>連動您的 Ragic 表單，實現即時訂單查詢、會員資料調用等進階功能。</p>
+          <div class="status-badge"><i class="fas fa-check-circle"></i> 已連線
+          </div>
+          <button class="sync-btn">更新 API 權限</button>
+        </div>
+
+        <div class="db-card">
+          <div class="db-icon"><i class="fab fa-github"></i></div>
+          <h3>GitHub Repository</h3>
+          <p>自動掃描您的 Markdown 文檔與程式碼註解作為 AI 的技術支援依據。</p>
+          <div class="status-badge"><i class="fas fa-check-circle"></i> 已連線
+          </div>
+          <button class="sync-btn">管理分支</button>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="settings" class="content-section">
+      <div class="section-header">
+        <h2>系統整合設定</h2>
+        <p>配置您的 GitHub Actions 與 AI 模型參數。</p>
+      </div>
+      <form action="https://api.getsite.ai/v1/forms/submit" method="POST"
+        class="settings-form">
+        <input type="hidden" name="form_name" value="system_settings">
+        <div class="form-group">
+          <label for="ai_model">AI 模型選擇</label>
+          <select id="ai_model" name="ai_model" required="">
+            <option value="gpt-4">GPT-4 Turbo (推薦)</option>
+            <option value="gpt-3.5">GPT-3.5 Turbo</option>
+            <option value="claude-3">Claude 3 Opus</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="github_token">GitHub Personal Access Token</label>
+          <input type="password" id="github_token" name="github_token"
+            placeholder="ghp_********************" required="">
+        </div>
+        <div class="form-group">
+          <label for="ragic_api">Ragic API Key</label>
+          <input type="password" id="ragic_api" name="ragic_api"
+            placeholder="輸入您的 Ragic API 金鑰">
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" name="auto_deploy" checked=""> 開啟 GitHub
+            Actions 自動部署更新
+          </label>
+        </div>
+        <button type="submit" class="btn-primary">儲存設定</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</div>
